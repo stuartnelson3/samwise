@@ -8,11 +8,17 @@ import (
 
 func setup(t *testing.T) *httptest.Server {
     t.Log("Setup testing environment")
-    return httptest.NewServer(http.HandlerFunc(streamFunc))
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", heartBeat)
+    return httptest.NewServer(mux)
 }
 
-func streamFunc(w http.ResponseWriter, r *http.Request) {
-    w.WriteHeader(200)
+func heartBeat(w http.ResponseWriter, r *http.Request) {
+    if r.FormValue("token") == "secret" {
+        w.WriteHeader(200)
+    } else {
+        w.WriteHeader(404)
+    }
 }
 
 func servers() map[string]bool {
@@ -21,11 +27,22 @@ func servers() map[string]bool {
 
 func TestStreamEndpoint(t *testing.T) {
     server := setup(t)
-    resp, err := http.Get(server.URL)
+    resp, err := http.Get(server.URL + "?token=secret")
     if err != nil {
         t.Fail()
     }
     if resp.StatusCode != 200 {
-        t.Error("status code wasn't 200")
+        t.Error("request unsuccessful")
+    }
+}
+
+func TestStreamEndpointNoToken(t *testing.T) {
+    server := setup(t)
+    resp, err := http.Get(server.URL)
+    if err != nil {
+        t.Fail()
+    }
+    if resp.StatusCode != 404 {
+        t.Error("made successful request without token")
     }
 }
