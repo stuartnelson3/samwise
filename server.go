@@ -18,7 +18,9 @@ func main() {
 
 	// load servers from config file into servers map
 	// should this be a slice that values are removed from instead of a map??
-	servers := map[string]bool{"server1": true, "server2": true, "server3": true}
+
+	// servers := map[string]bool{"server1": true, "server2": true, "server3": true}
+    servers := map[string]bool{"http://localhost:9000": true}
 	// confirm that the server are up??
 	for server, _ := range servers {
 		c.Add(server)
@@ -56,7 +58,7 @@ func main() {
 
 	m.Post("/add_server", func(w http.ResponseWriter, r *http.Request) {
 		server := r.FormValue("server")
-		_, err := http.Get(server + "/pulse")
+		_, err := http.Get(server)
 		if err != nil {
 			servers[server] = false
 			// write unsuccessful response
@@ -88,7 +90,7 @@ func main() {
 func MonitorServers(servers map[string]bool, c *consistent.Consistent) {
 	for {
 		for server, _ := range servers {
-			_, err := http.Get(server + "/pulse")
+			_, err := http.Get(server)
 			if err != nil {
 				servers[server] = false
 				// remove from consistent hashing
