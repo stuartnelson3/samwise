@@ -76,6 +76,7 @@ func TestStreamEndpoint(t *testing.T) {
 	}
 	if resp.StatusCode != 404 {
 		// got redirected and then 404'd
+		// aka FIXME
 		t.Error("did not get redirected")
 		t.Errorf("status code: %d", resp.StatusCode)
 	}
