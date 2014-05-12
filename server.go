@@ -37,7 +37,7 @@ func main() {
 	}))
 
 	m.Get("/", heartBeat)
-	m.Get("/stream", Stream)
+	m.Get("/stream", stream)
 
 	m.Post("/add_server", func(w http.ResponseWriter, r *http.Request) {
 		server := r.FormValue("server")
@@ -80,7 +80,7 @@ func heartBeat(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Stream(w http.ResponseWriter, r *http.Request) {
+func stream(w http.ResponseWriter, r *http.Request) {
 	token := r.FormValue("token")
 	if token != os.Getenv("TOKEN") {
 		w.WriteHeader(404)

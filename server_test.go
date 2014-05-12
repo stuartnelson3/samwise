@@ -13,7 +13,7 @@ func setup(t *testing.T) *httptest.Server {
 	c.Add("example")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", heartBeat)
-	mux.HandleFunc("/stream", Stream)
+	mux.HandleFunc("/stream", stream)
 	return httptest.NewServer(mux)
 }
 
