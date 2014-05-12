@@ -27,7 +27,7 @@ func main() {
 		c.Add(server)
 	}
 
-	go MonitorServers(servers, c)
+	go MonitorServers(servers)
 
 	m := martini.Classic()
 	m.Use(cors.Allow(&cors.Options{
@@ -95,22 +95,35 @@ func Stream(w http.ResponseWriter, r *http.Request) {
 	http.RedirectHandler(server+"/stream?&token="+token+"stream="+stream, 302).ServeHTTP(w, r)
 }
 
-func MonitorServers(servers map[string]bool, c *consistent.Consistent) {
+func MonitorServers(servers map[string]bool) {
 	for {
-		for server, _ := range servers {
-			_, err := http.Get(server)
-			if err != nil {
-				servers[server] = false
-				// remove from consistent hashing
-				c.Remove(server)
-			} else {
-				servers[server] = true
-				c.Add(server)
-				// add to consistent hashing if not already there
-			}
-		}
+		monitor(servers)
 		time.Sleep(5 * time.Minute)
 	}
+}
+
+func monitor(servers map[string]bool) {
+	for server, _ := range servers {
+		resp, err := http.Get(server)
+		if err != nil || resp.StatusCode != 200 {
+			servers[server] = false
+			c.Remove(server)
+		} else {
+			servers[server] = true
+			if !inHash(server) {
+				c.Add(server)
+			}
+		}
+	}
+}
+
+func inHash(server string) bool {
+	for _, s := range c.Members() {
+		if s == server {
+			return true
+		}
+	}
+	return false
 }
 
 func Restart(server string) {

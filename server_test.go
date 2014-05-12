@@ -89,3 +89,13 @@ func TestStreamEndpoint(t *testing.T) {
 		t.Errorf("status code: %d", resp.StatusCode)
 	}
 }
+
+func TestMonitorServersError(t *testing.T) {
+	// server := setup(t)
+	servers := map[string]bool{"garbageUrl": true}
+	monitor(servers)
+	if servers["garbageUrl"] {
+		t.Error("garbage url not marked inactive")
+		t.Fail()
+	}
+}
