@@ -36,6 +36,7 @@ func main() {
 		AllowHeaders: []string{"Origin"},
 	}))
 
+	m.Get("/", heartBeat)
 	m.Get("/stream", Stream)
 
 	m.Post("/add_server", func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +70,14 @@ func main() {
 		http.PostForm(server+"/update_stream", r.PostForm)
 	})
 	m.Run()
+}
+
+func heartBeat(w http.ResponseWriter, r *http.Request) {
+	if r.FormValue("token") == os.Getenv("TOKEN") {
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(404)
+	}
 }
 
 func Stream(w http.ResponseWriter, r *http.Request) {

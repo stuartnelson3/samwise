@@ -17,14 +17,6 @@ func setup(t *testing.T) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func heartBeat(w http.ResponseWriter, r *http.Request) {
-	if r.FormValue("token") == "secret" {
-		w.WriteHeader(200)
-	} else {
-		w.WriteHeader(404)
-	}
-}
-
 func endpoints() map[string]bool {
 	return map[string]bool{"http://localhost:8080": true}
 }
