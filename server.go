@@ -104,7 +104,7 @@ func MonitorServers(servers map[string]bool) {
 
 func monitor(servers map[string]bool) {
 	for server, _ := range servers {
-		resp, err := http.Get(server)
+		resp, err := checkServer(server)
 		if err != nil || resp.StatusCode != 200 {
 			servers[server] = false
 			c.Remove(server)
@@ -115,6 +115,10 @@ func monitor(servers map[string]bool) {
 			}
 		}
 	}
+}
+
+func checkServer(server string) (*http.Response, error) {
+	return http.Get(server + "?token=" + os.Getenv("TOKEN"))
 }
 
 func inHash(server string) bool {

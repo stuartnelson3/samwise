@@ -3,9 +3,8 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	// "log"
 	"os"
+	"testing"
 )
 
 func setup(t *testing.T) *httptest.Server {
@@ -91,11 +90,32 @@ func TestStreamEndpoint(t *testing.T) {
 }
 
 func TestMonitorServersError(t *testing.T) {
-	// server := setup(t)
+	c.Add("garbageUrl")
 	servers := map[string]bool{"garbageUrl": true}
 	monitor(servers)
 	if servers["garbageUrl"] {
 		t.Error("garbage url not marked inactive")
+		t.Fail()
+	}
+
+	if inHash("garbageUrl") {
+		t.Error("url not removed from consistent hashing")
+		t.Fail()
+	}
+}
+
+func TestMonitorServersSuccess(t *testing.T) {
+	server := setup(t)
+	c.Add(server.URL)
+	servers := map[string]bool{server.URL: false}
+	monitor(servers)
+	if !servers[server.URL] {
+		t.Error("correct url not marked active")
+		t.Fail()
+	}
+
+	if !inHash(server.URL) {
+		t.Error("correct url not marked active")
 		t.Fail()
 	}
 }
