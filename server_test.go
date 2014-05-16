@@ -16,6 +16,7 @@ func setup(t *testing.T) *httptest.Server {
 	mux.HandleFunc("/", heartBeat)
 	mux.HandleFunc("/stream", stream)
 	mux.HandleFunc("/add_server", addServer)
+	mux.HandleFunc("/update_stream", updateStream)
 	return httptest.NewServer(mux)
 }
 
@@ -133,5 +134,16 @@ func TestAddServers(t *testing.T) {
 	}
 	if !servers[url] {
 		t.Error("Server status incorrect")
+	}
+}
+
+func TestUpdateStream(t *testing.T) {
+	server := setup(t)
+	res, err := http.PostForm(server.URL+"/update_stream?token=secret&stream=stream123", url.Values{})
+	if err != nil {
+		t.Error("Error posting to add_server")
+	}
+	if res.StatusCode != 200 {
+		t.Errorf("Response: %d, expected 200", res.StatusCode)
 	}
 }

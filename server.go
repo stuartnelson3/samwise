@@ -40,21 +40,7 @@ func main() {
 	m.Get("/", heartBeat)
 	m.Get("/stream", stream)
 	m.Post("/add_server", addServer)
-
-	m.Post("/update_stream", func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		stream := r.FormValue("stream")
-		if stream == "" {
-			return
-		}
-
-		server, err := c.Get(stream)
-		if err != nil {
-			return
-		}
-
-		http.PostForm(server+"/update_stream", r.PostForm)
-	})
+	m.Post("/update_stream", updateStream)
 	m.Run()
 }
 
@@ -109,6 +95,23 @@ func addServer(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(200)
 	}
+}
+
+func updateStream(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	stream := r.FormValue("stream")
+	if stream == "" {
+		w.WriteHeader(404)
+		return
+	}
+
+	server, err := c.Get(stream)
+	if err != nil {
+		w.WriteHeader(404)
+		return
+	}
+
+	http.PostForm(server+"/update_stream", r.PostForm)
 }
 
 func MonitorServers(servers map[string]bool) {
