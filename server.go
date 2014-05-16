@@ -72,6 +72,10 @@ func stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// what happens if person 1 gets sent to site A, but then site B comes back
+	// online. Person 1, if they reconnected, would be directed to site B. All
+	// new users are going to site B. Should I send a disconnect message to the
+	// server that it needs to dump its users for hash X?
 	http.RedirectHandler(server+"/stream?&token="+token+"&stream="+stream, 302).ServeHTTP(w, r)
 }
 
