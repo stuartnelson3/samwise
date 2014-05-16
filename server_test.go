@@ -120,9 +120,8 @@ func TestAddServers(t *testing.T) {
 	data := url.Values{}
 	url := server.URL
 	data.Set("server", url)
-	// servers := make(map[string]bool)
-	servers := map[string]bool{server.URL: false}
-	res, err := http.PostForm(server.URL+"/add_server?token=secret", data)
+	servers = map[string]bool{url: false}
+	res, err := http.PostForm(url+"/add_server?token=secret", data)
 	if err != nil {
 		t.Error("Error posting to add_server")
 	}
