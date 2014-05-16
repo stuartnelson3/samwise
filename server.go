@@ -11,18 +11,19 @@ import (
 
 // write tests you lazy slob
 var c = consistent.New()
+var servers = map[string]bool{"http://localhost:9000": true}
+
+// load config file of servers
+// need to keep a heartbeat on servers and remove dead ones, then add them
+// to a queue to try to restart them.
+
+// load servers from config file into servers map
+// should this be a slice that values are removed from instead of a map??
+
+// servers := map[string]bool{"server1": true, "server2": true, "server3": true}
+// confirm that the server are up??
 
 func main() {
-	// load config file of servers
-	// need to keep a heartbeat on servers and remove dead ones, then add them
-	// to a queue to try to restart them.
-
-	// load servers from config file into servers map
-	// should this be a slice that values are removed from instead of a map??
-
-	// servers := map[string]bool{"server1": true, "server2": true, "server3": true}
-	servers := map[string]bool{"http://localhost:9000": true}
-	// confirm that the server are up??
 	for server, _ := range servers {
 		c.Add(server)
 	}
@@ -38,22 +39,7 @@ func main() {
 
 	m.Get("/", heartBeat)
 	m.Get("/stream", stream)
-
-	m.Post("/add_server", func(w http.ResponseWriter, r *http.Request) {
-		server := r.FormValue("server")
-		_, err := http.Get(server)
-		if err != nil {
-			servers[server] = false
-			w.WriteHeader(404)
-			// write unsuccessful response
-		} else {
-			servers[server] = true
-			w.WriteHeader(200)
-			// make sure this isn't a duplicate!!
-			c.Add(server)
-			// write successful response
-		}
-	})
+	m.Post("/add_server", addServer)
 
 	m.Post("/update_stream", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
@@ -92,16 +78,37 @@ func stream(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
-	// redirect to server based on consistent hash
 
-	// alternatively, have rails query this endpoint to get the route, then
-	// have rails return the found server to the client
 	server, err := c.Get(stream)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
+
 	http.RedirectHandler(server+"/stream?&token="+token+"stream="+stream, 302).ServeHTTP(w, r)
+}
+
+func addServer(w http.ResponseWriter, r *http.Request) {
+	if r.FormValue("token") != os.Getenv("TOKEN") {
+		w.WriteHeader(404)
+		return
+	}
+	server := r.FormValue("server")
+	if server == "" {
+		w.WriteHeader(404)
+		return
+	}
+	_, err := http.Get(server)
+	if err != nil {
+		servers[server] = false
+		w.WriteHeader(404)
+	} else {
+		servers[server] = true
+		if !inHash(server) {
+			c.Add(server)
+		}
+		w.WriteHeader(200)
+	}
 }
 
 func MonitorServers(servers map[string]bool) {

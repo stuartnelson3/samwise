@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 )
@@ -14,6 +15,7 @@ func setup(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", heartBeat)
 	mux.HandleFunc("/stream", stream)
+	mux.HandleFunc("/add_server", addServer)
 	return httptest.NewServer(mux)
 }
 
@@ -28,7 +30,7 @@ func TestHeartbeatEndpoint(t *testing.T) {
 		t.Fail()
 	}
 	if resp.StatusCode != 200 {
-		t.Error("request unsuccessful")
+		t.Errorf("Response: %d, expected 404", resp.StatusCode)
 	}
 }
 
@@ -39,7 +41,7 @@ func TestHeartbeatEndpointNoToken(t *testing.T) {
 		t.Fail()
 	}
 	if resp.StatusCode != 404 {
-		t.Error("made successful request without token")
+		t.Errorf("Response: %d, expected 404", resp.StatusCode)
 	}
 }
 
@@ -51,7 +53,7 @@ func TestStreamEndpointNoToken(t *testing.T) {
 		t.Fail()
 	}
 	if resp.StatusCode != 404 {
-		t.Error("stream made successful request without token")
+		t.Errorf("Response: %d, expected 404", resp.StatusCode)
 	}
 }
 
@@ -103,12 +105,34 @@ func TestMonitorServersSuccess(t *testing.T) {
 	servers := map[string]bool{server.URL: false}
 	monitor(servers)
 	if !servers[server.URL] {
-		t.Error("correct url not marked active")
+		t.Error("url not marked active")
 		t.Fail()
 	}
 
 	if !inHash(server.URL) {
-		t.Error("correct url not marked active")
+		t.Error("url not added to consistent hash")
 		t.Fail()
+	}
+}
+
+func TestAddServers(t *testing.T) {
+	server := setup(t)
+	data := url.Values{}
+	url := server.URL
+	data.Set("server", url)
+	// servers := make(map[string]bool)
+	servers := map[string]bool{server.URL: false}
+	res, err := http.PostForm(server.URL+"/add_server?token=secret", data)
+	if err != nil {
+		t.Error("Error posting to add_server")
+	}
+	if res.StatusCode != 200 {
+		t.Errorf("Response: %d, expected 200", res.StatusCode)
+	}
+	if !inHash(url) {
+		t.Error("Server not added to hash")
+	}
+	if !servers[url] {
+		t.Error("Server status incorrect")
 	}
 }
