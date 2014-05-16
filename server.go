@@ -72,7 +72,7 @@ func stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.RedirectHandler(server+"/stream?&token="+token+"stream="+stream, 302).ServeHTTP(w, r)
+	http.RedirectHandler(server+"/stream?&token="+token+"&stream="+stream, 302).ServeHTTP(w, r)
 }
 
 func addServer(w http.ResponseWriter, r *http.Request) {
