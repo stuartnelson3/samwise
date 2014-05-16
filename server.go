@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/codegangsta/martini"
 	"github.com/martini-contrib/cors"
 	"github.com/stathat/consistent"
@@ -11,7 +12,7 @@ import (
 
 // write tests you lazy slob
 var c = consistent.New()
-var servers = map[string]bool{"http://localhost:9000": true}
+var servers = map[string]bool{"http://localhost:9000": false, "http://localhost:9090": false}
 
 // load config file of servers
 // need to keep a heartbeat on servers and remove dead ones, then add them
@@ -117,7 +118,7 @@ func updateStream(w http.ResponseWriter, r *http.Request) {
 func MonitorServers(servers map[string]bool) {
 	for {
 		monitor(servers)
-		time.Sleep(5 * time.Minute)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -126,11 +127,15 @@ func monitor(servers map[string]bool) {
 		resp, err := checkServer(server)
 		if err != nil || resp.StatusCode != 200 {
 			servers[server] = false
-			c.Remove(server)
+			if inHash(server) {
+				c.Remove(server)
+				fmt.Println("Removed from hash: ", server)
+			}
 		} else {
 			servers[server] = true
 			if !inHash(server) {
 				c.Add(server)
+				fmt.Println("Added to hash: ", server)
 			}
 		}
 	}
