@@ -21,9 +21,9 @@ var servers = map[string]bool{"http://localhost:9000": false, "http://localhost:
 // load servers from config file into servers map
 // should this be a slice that values are removed from instead of a map??
 
-// servers := map[string]bool{"server1": true, "server2": true, "server3": true}
 // confirm that the server are up??
 
+// TODO: convert to gorilla mux
 func main() {
 	for server, _ := range servers {
 		c.Add(server)
@@ -34,7 +34,6 @@ func main() {
 	m := martini.Classic()
 	m.Use(cors.Allow(&cors.Options{
 		AllowOrigins: []string{"http://*", "https://*"},
-		AllowMethods: []string{"GET"},
 		AllowHeaders: []string{"Origin"},
 	}))
 
